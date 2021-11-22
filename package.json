@@ -34,13 +34,14 @@
     "prestart": "yarn run rebuild",
     "start": "node -r source-map-support/register .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
-    "rebuild": "yarn run clean && yarn run build"
+    "rebuild": "yarn run clean && yarn run build",
+    "hotreload": "DEBUG=robot:* nodemon -r source-map-support/register ."
   },
   "repository": {
     "type": "git",
     "url": ""
   },
-  "author": "Frank <fengxuting@qq.com>",
+  "author": "Hardy <fengxuting@gmail.com>",
   "license": "",
   "files": [
     "README.md",
@@ -56,6 +57,7 @@
     "@loopback/rest-explorer": "^3.3.2",
     "@loopback/service-proxy": "^3.2.2",
     "dotenv": "^10.0.0",
+    "loopback-connector-sqlite3": "^3.0.0",
     "telegraf": "^4.4.2",
     "tslib": "^2.0.0",
     "web3": "^1.5.2"
