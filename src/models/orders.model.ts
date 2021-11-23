@@ -10,10 +10,10 @@ export class Orders extends Entity {
   id?: number;
 
   @property({
-    type: 'string',
-    description: 'token address'
+    type: 'number',
+    description: '1=buy,2=sell'
   })
-  token?: string;
+  type?: number;
 
   @property({
     type: 'string',
@@ -26,7 +26,7 @@ export class Orders extends Entity {
     type: 'string',
     required: true,
   })
-  currency: string;
+  price: string;
 
   @property({
     type: 'string',
