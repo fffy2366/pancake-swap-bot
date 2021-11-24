@@ -17,7 +17,7 @@ export class Orders extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
     description: 'user address'
   })
   address: string;

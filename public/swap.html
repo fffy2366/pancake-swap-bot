@@ -64,7 +64,7 @@
       </ul>
     </nav>
 
-    <!-- 模态框 -->
+    <!-- 模态框 挂单 -->
     <div class="modal" id="myModal">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -87,13 +87,13 @@
               </div>
               <div class="form-group">
                 <label for="price">价格:</label>
-                <input type="text" class="form-control" id="price" placeholder="Enter price">
+                <input type="input" class="form-control" id="price" placeholder="Enter price">
               </div>
               <div class="form-group">
                 <label for="amount">数量(买填BNB数量，卖填Token数量):</label>
-                <input type="text" class="form-control" id="amount" placeholder="Enter amount">
+                <input type="input" class="form-control" id="amount" placeholder="Enter amount">
               </div>
-              <button type="button" onclick="add()" class="btn btn-primary">Submit</button>
+              <button type="button" id="addBtn" class="btn btn-primary">Submit</button>
             </form>
           </div>
 
@@ -105,6 +105,45 @@
         </div>
       </div>
     </div>
+
+    <div class="modal" id="myModalUpdate">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- 模态框头部 -->
+          <div class="modal-header">
+            <h4 class="modal-title">更新挂单</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <!-- 模态框内容 -->
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="type">买/卖:</label>
+                <input type="hidden" id="orderId" />
+              </div>
+              <div class="form-group">
+                <label for="price">价格:</label>
+                <input type="input" class="form-control" id="orderPrice" placeholder="Enter price">
+              </div>
+              <div class="form-group">
+                <label for="amount">数量(买填BNB数量，卖填Token数量):</label>
+                <input type="input" class="form-control" id="orderAmount" placeholder="Enter amount">
+              </div>
+              <button type="button" id="editBtn" class="btn btn-primary">更新</button>
+            </form>
+          </div>
+
+          <!-- 模态框底部 -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">关闭</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div>
   <script src="/js/bootstrap.bundle.min.js"
     integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
@@ -129,7 +168,6 @@
       account = accounts[0];
       $('.address').text(account);
     }
-    walletAddress();
 
     function getUrlParam(name) {
       var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
@@ -148,6 +186,7 @@
         "limit": pageSize,
         "skip": 0,
         "order": "id desc",
+        "where": { status: { lt: 4 } },
         "fields": {
           "id": true,
           "type": true,
@@ -202,8 +241,11 @@
               '<td>' +
               (order.status == 0 ? 'pending' : (order.status == 1 ? 'ing' : (order.status == 2 ? '完成' : '失败'))) +
               '</td>' +
-              '<td><a href="javascript:sign(' + order.id +
-              ');">编辑</a></td>' +
+              '<td><a href="javascript:editOrder(' + i +
+              ');">编辑</a>' +
+              '&nbsp;<a href="javascript:deleteOrder(' + order.id +
+              ');">删除</a>' +
+              '</td>' +
               '</tr>',
             );
           }
@@ -212,6 +254,45 @@
           // paginator(page, totalCount, pageSize);
         },
       });
+    }
+
+    function deleteOrder(id) {
+      const data = { status: 4 };
+      $.ajax({
+        type: 'PATCH',
+        contentType: 'application/json',
+        url:
+          window.location.protocol +
+          '//' +
+          window.location.host +
+          '/orders/' + id,
+        dataType: 'json',
+        data: JSON.stringify(data),
+        error: function (xhr, status, error) {
+          alert('删除失败');
+        },
+        success: function (result) {
+          console.log("add or edit result %o", result);
+
+          getList(currPage);
+        },
+      });
+    }
+
+    function editOrder(index) {
+      const order = orderList[index];
+      console.log("index %d, order %o", index, order);
+      $("#orderId").val(order.id);
+      $("#orderPrice").val(order.price);
+      $("#orderAmount").val(order.amount);
+      // const truck_modal = document.querySelector('#myModalUpdate');
+      // const modal = bootstrap.Modal.getInstance(truck_modal);
+      // modal.show();
+      var myModal = new bootstrap.Modal(document.getElementById("myModalUpdate"), {});
+      myModal.show();
+      // document.onreadystatechange = function () {
+      //   myModal.show();
+      // };
     }
 
     function paginator(currPage, totalCount, pageSize) {
@@ -234,84 +315,72 @@
     currPage = currPage == '' ? 1 : currPage;
     getList(currPage);
 
-    function sign(index) {
-      // orderId, address, currency, amount
-      const orderId = orderList[index].id;
-      const address = orderList[index].address;
-      const currency = orderList[index].currency;
-      const amount = orderList[index].amount;
-      const contractAddress = '0xa1FB7C91f9e1a4600525Af5c22F8A6ccb7cDeE7C'; // MetaFarm address
-      // 生成签名
-      console.log("start sign");
-      // amount = amount + "";
-      // const amt = new BigNumber(amount).toString();
-      const amt = web3.utils.toBN(amount).toString();
-      console.log("amt is %s", amt);
-      const prex = currency == 'usdt' ? 'withdrawUSDTV2' : 'claimV2';
-      const param = web3.eth.abi.encodeParameters(["string", "address", "address", "uint256", "uint256"], [prex, contractAddress, address, orderId, amt]);
-      const hash1 = web3.utils.sha3(param);
-      console.log("hash1 is %s", hash1);
-      // const hash2 = web3.utils.hexToBytes(hash1);
-      web3.eth.personal
-        .sign(hash1, account)
-        .then((signature) => {
-          // 提交签名
-          $.ajax({
-            type: 'post',
-            contentType: 'application/json',
-            url:
-              window.location.protocol +
-              '//' +
-              window.location.host +
-              '/orders/sign',
-            dataType: 'json',
-            data: JSON.stringify({
-              orderId,
-              sign: signature,
-            }),
-            error: function (xhr, status, error) {
-              alert('签名失败');
-            },
-            success: function (result) {
-              // window.location.reload();
-            },
-          });
-        });
-    }
-
     jQuery(function ($) {
-      //全选
-      $("#btnAll").on('click', function () {
-        const isChecked = $("#btnAll").is(':checked');
-        console.log("isChecked %o", isChecked);
-        if (isChecked) {
-          $("input[name='checkbox']").prop("checked", true);
-        } else {
-          $("input[name='checkbox']").prop("checked", false);
+      const truck_modal = document.querySelector('#myModalUpdate');
+      const modal = bootstrap.Modal.getInstance(truck_modal);
+      // modal.hide();
 
-          // $("input[name='checkbox']").removeAttr("checked");
+      $("#editBtn").click(function () {
+        const orderId = $("#orderId").val();
+        const price = $("#orderPrice").val();
+        const amount = $("#orderAmount").val();
+        if (!price || !amount) {
+          alert('price or amount invalid');
+          return;
         }
-      });
 
-      $("#batchSign").click(function () {
-        $("input[name='checkbox']:checkbox:checked").each(function () {
-          const i = $(this).val();
-          console.log(i);
-          sign(i);
-        })
+        const data = {
+          "price": price,
+          "amount": amount,
+        };
+        console.log("data: %o", data);
+
+        const truck_modal = document.querySelector('#myModalUpdate');
+        const modal = bootstrap.Modal.getInstance(truck_modal);
+        // modal.hide();
+        $.ajax({
+          type: 'PATCH',
+          contentType: 'application/json',
+          url:
+            window.location.protocol +
+            '//' +
+            window.location.host +
+            '/orders/' + orderId,
+          dataType: 'json',
+          data: JSON.stringify(data),
+          error: function (xhr, status, error) {
+            alert('更新失败');
+          },
+          success: function (result) {
+            console.log("update result %o", result);
+            modal.hide();
+
+            getList(currPage);
+          },
+        });
       });
 
       $("#addBtn").click(function () {
+        const type = parseInt($("#type").val());
+        const price = $("#price").val();
+        const amount = $("#amount").val();
+        if (!price || !amount) {
+          alert('price or amount invalid');
+          return;
+        }
 
         const data = {
-          "type": 0,
-          "address": "string",
-          "price": "string",
-          "amount": "string",
+          "type": type,
+          "address": "",
+          "price": price,
+          "amount": amount,
           "status": 0,
           "created": 0
         };
+        console.log("data: %o", data);
 
+        const truck_modal = document.querySelector('#myModal');
+        const modal = bootstrap.Modal.getInstance(truck_modal);
         $.ajax({
           type: 'post',
           contentType: 'application/json',
@@ -326,7 +395,10 @@
             alert('挂单失败');
           },
           success: function (result) {
-            // window.location.reload();
+            console.log("add or edit result %o", result);
+            modal.hide();
+
+            getList(currPage);
           },
         });
       });
