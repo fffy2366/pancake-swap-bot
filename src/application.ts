@@ -70,7 +70,7 @@ export class RobotSwapApplication extends BootMixin(
         const tokenAddress = config.SWAP_OUTPUT_TOKEN as string;
         const price = await pancake.getTokenPrice(tokenAddress);
         // debug("price %s", price);
-        // 买单
+        // 买单-用BNB买Token
         const ordersBuy = await ordersResp.find({where: {type: 1, status: 0, price: {gt: price}}, order: ['price desc']});
         for (const order of ordersBuy) {
           // debug("buy order id %d", order.id);
@@ -95,11 +95,11 @@ export class RobotSwapApplication extends BootMixin(
           }
 
         }
-        // 卖单
+        // 卖单-卖Token
         const ordersSell = await ordersResp.find({where: {type: 2, status: 0, price: {lt: price}}, order: ['price asc']});
         for (const order of ordersSell) {
           // const updateResult = await ordersResp.updateById(order.id, {status: 1});
-          // TODO: 开启事务
+          // TODO: 开启事务 账号余额判断
           const sql = "update orders set status = 1 where id = ? ";
           const params = [order.id];
           const updateResult = await ordersResp.dataSource.execute(sql, params);

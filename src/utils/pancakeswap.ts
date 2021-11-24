@@ -59,19 +59,30 @@ export class PancakeSwap {
     logger.info(`OutputToken loaded:${this.outputTokenAddress} / ${this.outputToken.symbol} / ${this.outputToken.decimals}`)
 
     //1.授权output Token交易
-    await this.approve(this.inputToken.address, MaxUint256)
-    await this.approve(this.outputToken.address, MaxUint256)
+    // await this.approve(this.inputToken.address, MaxUint256) //BNB
+    // await this.approve(this.outputToken.address, MaxUint256) // Token
+
 
     // this.inputTokenContract = new ethers.Contract(WBNB, ERC20, provider)
-    this.outputTokenContract = new ethers.Contract(this.outputToken.address, ERC20, provider)
+    this.outputTokenContract = new ethers.Contract(this.outputToken.address, ERC20, provider).connect(wallet);
+    await this.tokenApproveRoute(MaxUint256);
   }
 
   private async approve(spender: string, amount: any) {
     const add = await this.accountContract.allowance(wallet.address, spender)
     const apped = ethers.BigNumber.from(add)
     if (!apped.gt(0)) {
-      await this.accountContract.approve(spender, amount) //授权
+      await this.accountContract.approve(spender, amount) //授权BNB
       logger.warn(`approved: ${spender}`, apped.toString())
+    }
+  }
+
+  private async tokenApproveRoute(amount: any) {
+    const add = await this.outputTokenContract.allowance(wallet.address, ROUTER_ADDRESS)
+    const apped = ethers.BigNumber.from(add)
+    if (!apped.gt(0)) {
+      await this.outputTokenContract.approve(ROUTER_ADDRESS, amount) //授权BNB
+      logger.warn(`approved: ${ROUTER_ADDRESS}`, apped.toString())
     }
   }
 
