@@ -69,7 +69,7 @@ export class RobotSwapApplication extends BootMixin(
         // 查价格
         const tokenAddress = config.SWAP_OUTPUT_TOKEN as string;
         const price = await pancake.getTokenPrice(tokenAddress);
-        // debug("price %s", price);
+        debug("price %s", price);
         // 买单-用BNB买Token
         const ordersBuy = await ordersResp.find({where: {type: 1, status: 0, price: {gt: price}}, order: ['price desc']});
         for (const order of ordersBuy) {

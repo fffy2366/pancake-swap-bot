@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Review the withdrawal</title>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- <link rel="shortcut icon" type="image/x-icon" href="//v4.loopback.io/favicon.ico" /> -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- <link
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css"
+    /> -->
+  <link rel="stylesheet" href="/css/bootstrap-table.min.css" />
+</head>
+
+<body>
+
+  <div class="container">
+
+    <table class="table table-striped" data-toggle="table">
+      <thead>
+        <tr>
+          <!-- <th scope="col"><input id="btnAll" type="checkbox" />全选</th> -->
+          <th scope="col">#</th>
+          <!-- <th scope="col">address</th> -->
+          <th scope="col">买/卖</th>
+          <th scope="col">价格</th>
+          <th scope="col">数量</th>
+          <th scope="col">status</th>
+          <th scope="col">操作</th>
+        </tr>
+      </thead>
+      <tbody id="list">
+        <!-- <tr>
+          <th scope="row">1</th>
+          <td>Mark</td>
+          <td>Otto</td>
+          <td>@mdo</td>
+        </tr> -->
+      </tbody>
+    </table>
+    <div>
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">挂单</button>
+    </div>
+
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <!-- <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li> -->
+      </ul>
+    </nav>
+
+    <!-- 模态框 -->
+    <div class="modal" id="myModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- 模态框头部 -->
+          <div class="modal-header">
+            <h4 class="modal-title">挂单</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <!-- 模态框内容 -->
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="type">买/卖:</label>
+                <select class="form-control" id="type">
+                  <option value="1">买</option>
+                  <option value="2">卖</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="price">价格:</label>
+                <input type="text" class="form-control" id="price" placeholder="Enter price">
+              </div>
+              <div class="form-group">
+                <label for="amount">数量(买填BNB数量，卖填Token数量):</label>
+                <input type="text" class="form-control" id="amount" placeholder="Enter amount">
+              </div>
+              <button type="button" onclick="add()" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+
+          <!-- 模态框底部 -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">关闭</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/bootstrap.bundle.min.js"
+    integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+    crossorigin="anonymous"></script>
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/web3.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script> -->
+  <script src="/js/popper.min.js"></script>
+
+  <!-- <script src="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script> -->
+  <script src="/js/bootstrap-table.min.js"></script>
+  <script src="/js/bignumber.min.js"></script>
+  <script>
+    const pageSize = 50;
+    let web3 = new Web3(window.ethereum);
+    let account;
+    let orderList;
+    async function walletAddress() {
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      account = accounts[0];
+      $('.address').text(account);
+    }
+    walletAddress();
+
+    function getUrlParam(name) {
+      var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) {
+        return unescape(r[2]);
+      } else {
+        return '';
+      }
+    }
+
+    function getList(page) {
+      const start = (page - 1) * pageSize;
+      const filter = {
+        "offset": start,
+        "limit": pageSize,
+        "skip": 0,
+        "order": "id desc",
+        "fields": {
+          "id": true,
+          "type": true,
+          "address": true,
+          "price": true,
+          "amount": true,
+          "status": true,
+          "created": true
+        }
+      };
+      $.ajax({
+        type: 'get',
+        contentType: 'application/json',
+        url:
+          window.location.protocol +
+          '//' +
+          window.location.host +
+          '/orders?filter=' +
+          encodeURI(JSON.stringify(filter)),
+        dataType: 'json',
+
+        error: function (xhr, status, error) {
+          alert('请求失败');
+        },
+        success: function (result) {
+          // const totalCount = result.totalCount;
+          const { totalCount, list } = result;
+          orderList = list;
+          // $('.token').text(result.token);
+          // if(!)
+          let htmlArr = [];
+          for (let i = 0; i < list.length; i++) {
+            const order = list[i];
+            htmlArr.push(
+              '<tr>' +
+              // '<td>' +
+              // '<input name="checkbox" type="checkbox" value="' + i + '"/>' +
+              // '</td>' +
+              '<th scope="row">' +
+              order.id +
+              '</th>' +
+              '<td>' +
+              (order.type == 1 ? '买' : '卖') +
+              '</td>' +
+              '<td>' +
+              order.price +
+              '</td>' +
+              '<td>' +
+              order.amount +
+              '</td>' +
+
+              '<td>' +
+              (order.status == 0 ? 'pending' : (order.status == 1 ? 'ing' : (order.status == 2 ? '完成' : '失败'))) +
+              '</td>' +
+              '<td><a href="javascript:sign(' + order.id +
+              ');">编辑</a></td>' +
+              '</tr>',
+            );
+          }
+          const html = htmlArr.join('');
+          $('#list').html(html);
+          // paginator(page, totalCount, pageSize);
+        },
+      });
+    }
+
+    function paginator(currPage, totalCount, pageSize) {
+      const totalPage = Math.ceil(totalCount / pageSize);
+      const start = currPage - 3 > 0 ? currPage - 3 : 1;
+      const end = currPage + 3 <= totalPage ? currPage + 3 : totalPage;
+      let pageArr = [];
+      for (let i = start; i <= end; i++) {
+        pageArr.push(
+          '<li class="page-item"><a class="page-link" href="javascript:getList(' +
+          i +
+          ')">' +
+          i +
+          '</a></li>',
+        );
+      }
+      $('.pagination').html(pageArr.join(''));
+    }
+    let currPage = getUrlParam('page');
+    currPage = currPage == '' ? 1 : currPage;
+    getList(currPage);
+
+    function sign(index) {
+      // orderId, address, currency, amount
+      const orderId = orderList[index].id;
+      const address = orderList[index].address;
+      const currency = orderList[index].currency;
+      const amount = orderList[index].amount;
+      const contractAddress = '0xa1FB7C91f9e1a4600525Af5c22F8A6ccb7cDeE7C'; // MetaFarm address
+      // 生成签名
+      console.log("start sign");
+      // amount = amount + "";
+      // const amt = new BigNumber(amount).toString();
+      const amt = web3.utils.toBN(amount).toString();
+      console.log("amt is %s", amt);
+      const prex = currency == 'usdt' ? 'withdrawUSDTV2' : 'claimV2';
+      const param = web3.eth.abi.encodeParameters(["string", "address", "address", "uint256", "uint256"], [prex, contractAddress, address, orderId, amt]);
+      const hash1 = web3.utils.sha3(param);
+      console.log("hash1 is %s", hash1);
+      // const hash2 = web3.utils.hexToBytes(hash1);
+      web3.eth.personal
+        .sign(hash1, account)
+        .then((signature) => {
+          // 提交签名
+          $.ajax({
+            type: 'post',
+            contentType: 'application/json',
+            url:
+              window.location.protocol +
+              '//' +
+              window.location.host +
+              '/orders/sign',
+            dataType: 'json',
+            data: JSON.stringify({
+              orderId,
+              sign: signature,
+            }),
+            error: function (xhr, status, error) {
+              alert('签名失败');
+            },
+            success: function (result) {
+              // window.location.reload();
+            },
+          });
+        });
+    }
+
+    jQuery(function ($) {
+      //全选
+      $("#btnAll").on('click', function () {
+        const isChecked = $("#btnAll").is(':checked');
+        console.log("isChecked %o", isChecked);
+        if (isChecked) {
+          $("input[name='checkbox']").prop("checked", true);
+        } else {
+          $("input[name='checkbox']").prop("checked", false);
+
+          // $("input[name='checkbox']").removeAttr("checked");
+        }
+      });
+
+      $("#batchSign").click(function () {
+        $("input[name='checkbox']:checkbox:checked").each(function () {
+          const i = $(this).val();
+          console.log(i);
+          sign(i);
+        })
+      });
+
+      $("#addBtn").click(function () {
+
+        const data = {
+          "type": 0,
+          "address": "string",
+          "price": "string",
+          "amount": "string",
+          "status": 0,
+          "created": 0
+        };
+
+        $.ajax({
+          type: 'post',
+          contentType: 'application/json',
+          url:
+            window.location.protocol +
+            '//' +
+            window.location.host +
+            '/orders',
+          dataType: 'json',
+          data: JSON.stringify(data),
+          error: function (xhr, status, error) {
+            alert('挂单失败');
+          },
+          success: function (result) {
+            // window.location.reload();
+          },
+        });
+      });
+
+    });
+  </script>
+</body>
+
+</html>
