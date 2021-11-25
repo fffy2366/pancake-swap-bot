@@ -40,7 +40,7 @@ export class PancakeSwap {
 
   private swapOptions = {
     feeOnTransfer: false,
-    allowedSlippage: new Percent(JSBI.BigInt(Math.floor(1200)), BIPS_BASE), //滑动万分之..
+    allowedSlippage: new Percent(JSBI.BigInt(Math.floor(50)), BIPS_BASE), //滑动万分之..
     recipient: activateAccount.address, //account address
     ttl: 60 * 2, //2min,
   }
