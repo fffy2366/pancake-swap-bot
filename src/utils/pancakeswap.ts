@@ -22,7 +22,7 @@ const ROUTER_ADDRESS = config.ROUTE_ADDRESS
 
 // @ts-ignore
 const routerContract = new web3.eth.Contract(IUniswapV2Router02ABI, ROUTER_ADDRESS); //路由合约
-
+const slippage = config.SLIPPAGE || 100;
 
 export class PancakeSwap {
   private outputToken: any;
@@ -40,7 +40,7 @@ export class PancakeSwap {
 
   private swapOptions = {
     feeOnTransfer: false,
-    allowedSlippage: new Percent(JSBI.BigInt(Math.floor(50)), BIPS_BASE), //滑动万分之..
+    allowedSlippage: new Percent(JSBI.BigInt(Math.floor(slippage)), BIPS_BASE), //滑动万分之..
     recipient: activateAccount.address, //account address
     ttl: 60 * 2, //2min,
   }
