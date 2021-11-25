@@ -131,6 +131,14 @@
                 <label for="amount">数量(买填BNB数量，卖填Token数量):</label>
                 <input type="input" class="form-control" id="orderAmount" placeholder="Enter amount">
               </div>
+              <label for="type">状态:</label>
+              <select class="form-control" id="orderStatus">
+                <option value="0">等待</option>
+                <option value="1">进行中</option>
+                <option value="2">完成</option>
+                <option value="3">失败</option>
+                <!-- <option value="4">删除</option> -->
+              </select>
               <button type="button" id="editBtn" class="btn btn-primary">更新</button>
             </form>
           </div>
@@ -145,9 +153,7 @@
     </div>
 
   </div>
-  <script src="/js/bootstrap.bundle.min.js"
-    integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
-    crossorigin="anonymous"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
   <script src="./js/jquery.min.js"></script>
   <script src="./js/web3.min.js"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script> -->
@@ -239,7 +245,7 @@
               '</td>' +
 
               '<td>' +
-              (order.status == 0 ? 'pending' : (order.status == 1 ? 'ing' : (order.status == 2 ? '完成' : '失败'))) +
+              (order.status == 0 ? '等待' : (order.status == 1 ? '进行中' : (order.status == 2 ? '完成' : (order.status == 3 ? '失败' : '删除')))) +
               '</td>' +
               '<td><a href="javascript:editOrder(' + i +
               ');">编辑</a>' +
@@ -285,6 +291,8 @@
       $("#orderId").val(order.id);
       $("#orderPrice").val(order.price);
       $("#orderAmount").val(order.amount);
+      $("#orderStatus").val(order.status);
+
       // const truck_modal = document.querySelector('#myModalUpdate');
       // const modal = bootstrap.Modal.getInstance(truck_modal);
       // modal.show();
@@ -324,6 +332,7 @@
         const orderId = $("#orderId").val();
         const price = $("#orderPrice").val();
         const amount = $("#orderAmount").val();
+        const status = parseInt($("#orderStatus").val());
         if (!price || !amount) {
           alert('price or amount invalid');
           return;
@@ -332,6 +341,7 @@
         const data = {
           "price": price,
           "amount": amount,
+          "status": status
         };
         console.log("data: %o", data);
 
@@ -402,7 +412,9 @@
           },
         });
       });
-
+      setInterval(function () {
+        getList(currPage)
+      }, 3000);
     });
   </script>
 </body>
