@@ -174,6 +174,8 @@ export class PancakeSwap {
       }
       if (gas) {
         // transactionObject.gasLimit = gas.toNumber() * 3 //使用3倍gas费
+      } else {
+        return false;
       }
       const wasteGas = Date.now() - startTime
       logger.trace(`Start.swap: ${routeTag} | ${parameters.methodName}, gasLimit:${gas.toString()} / Time:${wasteGas}ms,value: ${ethers.utils.formatUnits(value, trade.inputAmount.decimals).toString()}`)
