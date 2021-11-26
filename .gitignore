@@ -64,4 +64,5 @@ typings/
 *.tsbuildinfo
 
 # sqlite database file
-db/
+db/*
+!db/.gitkeep
