@@ -117,6 +117,7 @@ export class PancakeSwap {
     if (!curr) {
       return false;
     }
+    this.swapOptions.feeOnTransfer = false;
     return Trade.bestTradeExactIn(pairsList, curr, this.outputToken, this.tradeOptions)[0] ?? null
   }
 
@@ -129,6 +130,7 @@ export class PancakeSwap {
     if (!curr) {
       return false;
     }
+    this.swapOptions.feeOnTransfer = true;
     return Trade.bestTradeExactIn(pairsList, curr, op, this.tradeOptions)[0] ?? null
   }
 
